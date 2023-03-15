@@ -3,6 +3,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { config } from '../config';
 import { Environment } from '../config/env';
+import baseRouter from '../routes';
 
 Environment.setup();
 
@@ -28,7 +29,7 @@ app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use("/api/v1", baseRouter.routes);
 app.get('/', (req: Request, res: Response) => {
     res.status(200).json({
         status: 'success',

@@ -1,18 +1,35 @@
 import axios from "axios";
-import * as api from 'api';
 import { config } from "../../config";
 
 class Movio {
-    sdk: any;
+    defaultHeaders: {
+        accept?: string;
+        "content-type"?: string;
+        "x-api-key": string;
+    };
 
     constructor() {
-        this.sdk = api.default('@movio-api/v3.0.2#4ud7ra35l9o5eim5');
-        this.sdk.auth(config.MOVIO_KEY);
+        this.defaultHeaders = {
+            accept: "application/json",
+            "x-api-key": config.MOVIO_KEY
+        }
     }
 
     async listPhotos() {
+        const url = 'https://api.movio.la/v1/talking_photo.list';
         try {
-            const avatarList = await this.sdk.getAvatarList();
+            const { data: { data: photoList } } = await axios.get(url, { headers: this.defaultHeaders });
+            return photoList;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
+    async listAvatars() {
+        const url = 'https://api.movio.la/v1/avatar.list';
+        try {
+            const { data: { data: { avatars: avatarList } } } = await axios.get(url, { headers: this.defaultHeaders });
             return avatarList;
         } catch (error) {
             console.log(error);
@@ -20,28 +37,86 @@ class Movio {
         }
     }
 
-    private async listVoices() {
-
+    async listVoices() {
+        const url = 'https://api.movio.la/v1/voice.list';
+        try {
+            const { data: { data: voices } } = await axios.get(url, { headers: this.defaultHeaders });
+            return voices;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
     }
 
-    private async getUploadURL() {
+    async getResources() {
+        const tasks = [this.listPhotos(), this.listAvatars(), this.listVoices()];
+        try {
+            const [photos, avatars, voices] = await Promise.all(tasks);
+            return { photos, avatars: avatars.avatars, voices: voices.voices };
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
 
+    private async getUploadURL(type: string) {
+        const url = 'https://api.movio.la/v1/upload_url.get';
+        const requestOptions = {
+            headers: {
+                "x-api-key": this.defaultHeaders["x-api-key"],
+                "Content-Type": "application/json"
+            }
+        };
+        const instance = axios.create();
+        instance.interceptors.request.use((conf) => {
+            conf.data = {
+                content_type: `image/${type}`
+            };
+            return conf;
+        })
+
+        try {
+            const { data: { data: uploadParams } } = await instance.get(url, requestOptions);
+            return uploadParams;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
     }
 
     private async uploadPhoto() {
 
     }
 
-    async createVideo() {
+    async createVideo(payload: any) {
+        const url = 'https://api.movio.la/v1/video.generate';
+        const requestOptions = {
+            headers: {
+                "x-api-key": this.defaultHeaders["x-api-key"],
+                "Content-Type": "application/json"
+            }
+        };
 
+        try {
+            const { data: response } = await axios.post(url, payload, requestOptions);
+            return response;
+        } catch (error) {
+            throw error;
+        }
     }
 
-    async getVideo() {
-
-    }
-
-    async getResources() {
-
+    async getVideo(videoId: string) {
+        const url = 'https://api.movio.la/v1/video_status.get';
+        try {
+            const { data: { data: response } } = await axios.get(url, {
+                headers: this.defaultHeaders,
+                params: {video_id: videoId}
+            });
+            return response;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
     }
 }
 

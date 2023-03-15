@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const text_completion_1 = __importDefault(require("../models/text_completion"));
+const text_completion_1 = __importDefault(require("../../models/text_completion"));
 class TextCompletion {
     textCompletion(req, res) {
         return __awaiter(this, void 0, void 0, function* () {

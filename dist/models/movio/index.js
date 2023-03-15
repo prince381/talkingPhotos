@@ -1,27 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -31,18 +8,37 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const api = __importStar(require("api"));
+const axios_1 = __importDefault(require("axios"));
 const config_1 = require("../../config");
 class Movio {
     constructor() {
-        this.sdk = api.default('@movio-api/v3.0.2#4ud7ra35l9o5eim5');
-        this.sdk.auth(config_1.config.MOVIO_KEY);
+        this.defaultHeaders = {
+            accept: "application/json",
+            "x-api-key": config_1.config.MOVIO_KEY
+        };
     }
     listPhotos() {
         return __awaiter(this, void 0, void 0, function* () {
+            const url = 'https://api.movio.la/v1/talking_photo.list';
             try {
-                const avatarList = yield this.sdk.getAvatarList();
+                const { data: { data: photoList } } = yield axios_1.default.get(url, { headers: this.defaultHeaders });
+                return photoList;
+            }
+            catch (error) {
+                console.log(error);
+                throw error;
+            }
+        });
+    }
+    listAvatars() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const url = 'https://api.movio.la/v1/avatar.list';
+            try {
+                const { data: { data: { avatars: avatarList } } } = yield axios_1.default.get(url, { headers: this.defaultHeaders });
                 return avatarList;
             }
             catch (error) {
@@ -53,26 +49,92 @@ class Movio {
     }
     listVoices() {
         return __awaiter(this, void 0, void 0, function* () {
+            const url = 'https://api.movio.la/v1/voice.list';
+            try {
+                const { data: { data: voices } } = yield axios_1.default.get(url, { headers: this.defaultHeaders });
+                return voices;
+            }
+            catch (error) {
+                console.log(error);
+                throw error;
+            }
         });
     }
-    getUploadURL() {
+    getResources() {
         return __awaiter(this, void 0, void 0, function* () {
+            const tasks = [this.listPhotos(), this.listAvatars(), this.listVoices()];
+            try {
+                const [photos, avatars, voices] = yield Promise.all(tasks);
+                return { photos, avatars: avatars.avatars, voices: voices.voices };
+            }
+            catch (error) {
+                console.log(error);
+                throw error;
+            }
+        });
+    }
+    getUploadURL(type) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const url = 'https://api.movio.la/v1/upload_url.get';
+            const requestOptions = {
+                headers: {
+                    "x-api-key": this.defaultHeaders["x-api-key"],
+                    "Content-Type": "application/json"
+                }
+            };
+            const instance = axios_1.default.create();
+            instance.interceptors.request.use((conf) => {
+                conf.data = {
+                    content_type: `image/${type}`
+                };
+                return conf;
+            });
+            try {
+                const { data: { data: uploadParams } } = yield instance.get(url, requestOptions);
+                return uploadParams;
+            }
+            catch (error) {
+                console.log(error);
+                throw error;
+            }
         });
     }
     uploadPhoto() {
         return __awaiter(this, void 0, void 0, function* () {
         });
     }
-    createVideo() {
+    createVideo(payload) {
         return __awaiter(this, void 0, void 0, function* () {
+            const url = 'https://api.movio.la/v1/video.generate';
+            const requestOptions = {
+                headers: {
+                    "x-api-key": this.defaultHeaders["x-api-key"],
+                    "Content-Type": "application/json"
+                }
+            };
+            try {
+                const { data: response } = yield axios_1.default.post(url, payload, requestOptions);
+                return response;
+            }
+            catch (error) {
+                throw error;
+            }
         });
     }
-    getVideo() {
+    getVideo(videoId) {
         return __awaiter(this, void 0, void 0, function* () {
-        });
-    }
-    getResources() {
-        return __awaiter(this, void 0, void 0, function* () {
+            const url = 'https://api.movio.la/v1/video_status.get';
+            try {
+                const { data: { data: response } } = yield axios_1.default.get(url, {
+                    headers: this.defaultHeaders,
+                    params: { video_id: videoId }
+                });
+                return response;
+            }
+            catch (error) {
+                console.log(error);
+                throw error;
+            }
         });
     }
 }
