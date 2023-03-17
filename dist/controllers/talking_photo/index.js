@@ -123,7 +123,12 @@ class TalkingPhoto {
     }
     getAvatarVideo(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { video_id } = req.body;
+            const { video_id } = req.params;
+            if (!video_id)
+                res.status(400).json({
+                    success: false,
+                    message: 'Bad Request: video_id not included in request.',
+                });
             try {
                 const resources = yield movio_1.default.getVideo(video_id);
                 // console.log(resources);

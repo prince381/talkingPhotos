@@ -98,8 +98,13 @@ class Movio {
         };
 
         try {
-            const { data: response } = await axios.post(url, payload, requestOptions);
-            return response;
+            const { data: { data: response } } = await axios.post(url, payload, requestOptions);
+            return {
+                video_id: response.video_id,
+                talking_photo_id: payload.clips[0].talking_photo_id,
+                voice_id: payload.clips[0].voice_id || '',
+                timestamp: new Date()
+            };
         } catch (error) {
             throw error;
         }

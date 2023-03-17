@@ -100,7 +100,13 @@ class TalkingPhoto {
     }
 
     async getAvatarVideo(req: Request, res: Response) {
-        const { video_id } = req.body;
+        const { video_id } = req.params;
+        if (!video_id)
+            res.status(400).json({
+                success: false,
+                message: 'Bad Request: video_id not included in request.',
+            });
+
         try {
             const resources = await Movio.getVideo(video_id);
             // console.log(resources);
