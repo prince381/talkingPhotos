@@ -12,7 +12,7 @@ class TalkingPhotoRoutes {
         router.get('/voices', talking_photo_1.default.listAvatarVoices);
         router.get('/avatars', talking_photo_1.default.listTalkingAvatars);
         router.get('/all', talking_photo_1.default.getAllResources);
-        router.get('/get_video', talking_photo_1.default.getAvatarVideo);
+        router.get('/get_video/:video_id', talking_photo_1.default.getAvatarVideo);
         router.post('/create', talking_photo_1.default.createAvatarVideo);
         return router;
     }
