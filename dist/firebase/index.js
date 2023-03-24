@@ -23,24 +23,23 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.config = void 0;
-const dotenv = __importStar(require("dotenv"));
-dotenv.config();
-exports.config = {
-    SERVER_PORT: process.env.PORT || '',
-    NODE_ENV: process.env.NODE_ENV || '',
-    MOVIO_KEY: process.env.MOVIO_API_KEY || '',
-    TTS_KEY: process.env.TTS_API_KEY || '',
-    OPENAI_KEY: process.env.OPENAI_KEY || '',
-    ORIGIN: process.env.ORIGIN || '',
-    SHOT_STACK: process.env.SHOT_STACK_KEY || '',
-    PROJECT_ID: process.env.PROJECT_ID || '',
-    PRIVATE_KEY_ID: process.env.PRIVATE_KEY_ID || '',
-    PRIVATE_KEY: process.env.PRIVATE_KEY || '',
-    CLIENT_EMAIL: process.env.CLIENT_EMAIL || '',
-    CLIENT_ID: process.env.CLIENT_ID || '',
-    AUTH_URI: process.env.AUTH_URI || '',
-    TOKEN_URI: process.env.TOKEN_URI || '',
-    AUTH_PROVIDER_X509_CERT_URL: process.env.AUTH_PROVIDER_X509_CERT_URL || '',
-    CLIENT_X509_CERT_URL: process.env.CLIENT_X509_CERT_URL || '',
+exports.storage = exports.db = void 0;
+const admin = __importStar(require("firebase-admin"));
+const config_1 = require("../config");
+const serviceAccount = {
+    type: 'service_account',
+    project_id: config_1.config.PROJECT_ID,
+    private_key_id: config_1.config.PRIVATE_KEY_ID,
+    private_key: config_1.config.PRIVATE_KEY.replace(/\\n/gm, "\n"),
+    client_email: config_1.config.CLIENT_EMAIL,
+    client_id: config_1.config.CLIENT_ID,
+    auth_uri: config_1.config.AUTH_URI,
+    token_uri: config_1.config.TOKEN_URI,
+    auth_provider_x509_cert_url: config_1.config.AUTH_PROVIDER_X509_CERT_URL,
+    client_x509_cert_url: config_1.config.CLIENT_X509_CERT_URL
 };
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+exports.db = admin.firestore();
+exports.storage = admin.storage();

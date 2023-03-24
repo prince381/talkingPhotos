@@ -1,5 +1,7 @@
 import axios from "axios";
 import { config } from "../../config";
+import { db } from "../../firebase";
+import EventEmitter from "events";
 
 class Movio {
     defaultHeaders: {
@@ -7,12 +9,14 @@ class Movio {
         "content-type"?: string;
         "x-api-key": string;
     };
+    emitter: EventEmitter;
 
     constructor() {
         this.defaultHeaders = {
             accept: "application/json",
             "x-api-key": config.MOVIO_KEY
-        }
+        };
+        this.emitter = new EventEmitter();
     }
 
     async listPhotos() {
@@ -110,13 +114,47 @@ class Movio {
         }
     }
 
-    async getVideo(videoId: string) {
+    private async getVideoStatus(videoId: string) {
         const url = 'https://api.movio.la/v1/video_status.get';
         try {
             const { data: { data: response } } = await axios.get(url, {
                 headers: this.defaultHeaders,
                 params: {video_id: videoId}
             });
+            const { id, status, video_url } = response;
+            if (status === 'completed') {
+                await db.collection('TalkingPhotos').doc(id).update({ video_url, status, id });
+                console.log('Video ready');
+                return;
+            } else if (status === 'failed') {
+                console.log('Video failed');
+                await db.collection('TalkingPhotos').doc(id).update({ status, id });
+                return;
+            } else {
+                console.log('Video not ready');
+                setTimeout(() => this.getVideoStatus(videoId), 30000);
+            }
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
+    async getVideo(videoId: string) {
+        await this.getVideoStatus(videoId);
+        // return true;
+    }
+
+    async renderWaterMark(id: string, video_url: string) {
+        const url = 'http://localhost:8080/api/v1/add-watermark';
+        const requestOptions = {
+            headers: {
+                "x-api-key": config.SHOT_STACK,
+                "Content-Type": "application/json"
+            }
+        };
+        try {
+            const { data: response } = await axios.post(url, {video_url, id}, requestOptions);
             return response;
         } catch (error) {
             console.log(error);

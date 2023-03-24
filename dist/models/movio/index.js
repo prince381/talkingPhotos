@@ -14,12 +14,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
 const config_1 = require("../../config");
+const firebase_1 = require("../../firebase");
+const events_1 = __importDefault(require("events"));
 class Movio {
     constructor() {
         this.defaultHeaders = {
             accept: "application/json",
             "x-api-key": config_1.config.MOVIO_KEY
         };
+        this.emitter = new events_1.default();
     }
     listPhotos() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -126,7 +129,7 @@ class Movio {
             }
         });
     }
-    getVideo(videoId) {
+    getVideoStatus(videoId) {
         return __awaiter(this, void 0, void 0, function* () {
             const url = 'https://api.movio.la/v1/video_status.get';
             try {
@@ -134,6 +137,45 @@ class Movio {
                     headers: this.defaultHeaders,
                     params: { video_id: videoId }
                 });
+                const { id, status, video_url } = response;
+                if (status === 'completed') {
+                    yield firebase_1.db.collection('TalkingPhotos').doc(id).update({ video_url, status, id });
+                    console.log('Video ready');
+                    return;
+                }
+                else if (status === 'failed') {
+                    console.log('Video failed');
+                    yield firebase_1.db.collection('TalkingPhotos').doc(id).update({ status, id });
+                    return;
+                }
+                else {
+                    console.log('Video not ready');
+                    setTimeout(() => this.getVideoStatus(videoId), 30000);
+                }
+            }
+            catch (error) {
+                console.log(error);
+                throw error;
+            }
+        });
+    }
+    getVideo(videoId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getVideoStatus(videoId);
+            // return true;
+        });
+    }
+    renderWaterMark(id, video_url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const url = 'http://localhost:8080/api/v1/add-watermark';
+            const requestOptions = {
+                headers: {
+                    "x-api-key": config_1.config.SHOT_STACK,
+                    "Content-Type": "application/json"
+                }
+            };
+            try {
+                const { data: response } = yield axios_1.default.post(url, { video_url, id }, requestOptions);
                 return response;
             }
             catch (error) {

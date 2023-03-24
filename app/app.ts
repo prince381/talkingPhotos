@@ -1,6 +1,5 @@
 import { Express, Request, Response } from 'express';
 import cors from 'cors';
-import bodyParser from 'body-parser';
 import { config } from '../config';
 import { Environment } from '../config/env';
 import baseRouter from '../routes';

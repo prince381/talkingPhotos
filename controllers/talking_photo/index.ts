@@ -108,12 +108,10 @@ class TalkingPhoto {
             });
 
         try {
-            const resources = await Movio.getVideo(video_id);
-            // console.log(resources);
+            console.log('updating video with id: ', video_id);
+            await Movio.getVideo(video_id);
             res.status(200).json({
                 success: true,
-                data: resources,
-                total: 1,
             });
         } catch (error) {
             console.log(error);
