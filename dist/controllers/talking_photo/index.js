@@ -130,12 +130,10 @@ class TalkingPhoto {
                     message: 'Bad Request: video_id not included in request.',
                 });
             try {
-                const resources = yield movio_1.default.getVideo(video_id);
-                // console.log(resources);
+                console.log('updating video with id: ', video_id);
+                yield movio_1.default.getVideo(video_id);
                 res.status(200).json({
                     success: true,
-                    data: resources,
-                    total: 1,
                 });
             }
             catch (error) {
