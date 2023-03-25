@@ -139,8 +139,9 @@ class Movio {
                 });
                 const { id, status, video_url } = response;
                 if (status === 'completed') {
-                    yield firebase_1.db.collection('TalkingPhotos').doc(id).update({ video_url, status, id });
+                    // const videoBuffer = await this.getVideoWithWaterMark(video_url);
                     console.log('Video ready');
+                    yield firebase_1.db.collection('TalkingPhotos').doc(id).update({ video_url, status, id });
                     return;
                 }
                 else if (status === 'failed') {
@@ -165,17 +166,11 @@ class Movio {
             // return true;
         });
     }
-    renderWaterMark(id, video_url) {
+    getVideoWithWaterMark(video_url) {
         return __awaiter(this, void 0, void 0, function* () {
             const url = 'http://localhost:8080/api/v1/add-watermark';
-            const requestOptions = {
-                headers: {
-                    "x-api-key": config_1.config.SHOT_STACK,
-                    "Content-Type": "application/json"
-                }
-            };
             try {
-                const { data: response } = yield axios_1.default.post(url, { video_url, id }, requestOptions);
+                const { data: response } = yield axios_1.default.post(url, { video_url }, { responseType: 'arraybuffer' });
                 return response;
             }
             catch (error) {
