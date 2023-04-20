@@ -101,6 +101,7 @@ class TalkingPhoto {
 
     async getAvatarVideo(req: Request, res: Response) {
         const { video_id } = req.params;
+        const test: boolean = (req.query.test === 'true' ? true : false) || true;
         if (!video_id)
             res.status(400).json({
                 success: false,
@@ -109,7 +110,7 @@ class TalkingPhoto {
 
         try {
             console.log('updating video with id: ', video_id);
-            await Movio.getVideo(video_id);
+            await Movio.getVideo(video_id, test);
             res.status(200).json({
                 success: true,
             });

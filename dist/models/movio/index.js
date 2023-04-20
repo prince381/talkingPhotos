@@ -129,7 +129,7 @@ class Movio {
             }
         });
     }
-    getVideoStatus(videoId) {
+    getVideoStatus(videoId, test) {
         return __awaiter(this, void 0, void 0, function* () {
             const url = 'https://api.movio.la/v1/video_status.get';
             try {
@@ -141,17 +141,17 @@ class Movio {
                 if (status === 'completed') {
                     // const videoBuffer = await this.getVideoWithWaterMark(video_url);
                     console.log('Video ready');
-                    yield firebase_1.db.collection('TalkingPhotos').doc(id).update({ video_url, status, id });
+                    yield firebase_1.db.collection('AudioPodcasts').doc(videoId).update({ url: video_url, status });
                     return;
                 }
                 else if (status === 'failed') {
                     console.log('Video failed');
-                    yield firebase_1.db.collection('TalkingPhotos').doc(id).update({ status, id });
+                    yield firebase_1.db.collection('AudioPodcasts').doc(videoId).update({ status });
                     return;
                 }
                 else {
                     console.log('Video not ready');
-                    setTimeout(() => this.getVideoStatus(videoId), 30000);
+                    setTimeout(() => this.getVideoStatus(videoId, test), 30000);
                 }
             }
             catch (error) {
@@ -160,10 +160,10 @@ class Movio {
             }
         });
     }
-    getVideo(videoId) {
+    getVideo(videoId, test = true) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.getVideoStatus(videoId);
-            // return true;
+            yield this.getVideoStatus(videoId, test);
+            return true;
         });
     }
     getVideoWithWaterMark(video_url) {
