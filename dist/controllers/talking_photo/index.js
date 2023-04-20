@@ -124,6 +124,7 @@ class TalkingPhoto {
     getAvatarVideo(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const { video_id } = req.params;
+            const test = (req.query.test === 'true' ? true : false) || true;
             if (!video_id)
                 res.status(400).json({
                     success: false,
@@ -131,7 +132,7 @@ class TalkingPhoto {
                 });
             try {
                 console.log('updating video with id: ', video_id);
-                yield movio_1.default.getVideo(video_id);
+                yield movio_1.default.getVideo(video_id, test);
                 res.status(200).json({
                     success: true,
                 });

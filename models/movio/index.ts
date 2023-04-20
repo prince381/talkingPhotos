@@ -114,7 +114,7 @@ class Movio {
         }
     }
 
-    private async getVideoStatus(videoId: string) {
+    private async getVideoStatus(videoId: string, test: boolean) {
         const url = 'https://api.movio.la/v1/video_status.get';
         try {
             const { data: { data: response } } = await axios.get(url, {
@@ -125,15 +125,15 @@ class Movio {
             if (status === 'completed') {
                 // const videoBuffer = await this.getVideoWithWaterMark(video_url);
                 console.log('Video ready');
-                await db.collection('TalkingPhotos').doc(id).update({ video_url, status, id });
+                await db.collection('AudioPodcasts').doc(videoId).update({ url: video_url, status });
                 return;
             } else if (status === 'failed') {
                 console.log('Video failed');
-                await db.collection('TalkingPhotos').doc(id).update({ status, id });
+                await db.collection('AudioPodcasts').doc(videoId).update({ status });
                 return;
             } else {
                 console.log('Video not ready');
-                setTimeout(() => this.getVideoStatus(videoId), 30000);
+                setTimeout(() => this.getVideoStatus(videoId, test), 30000);
             }
         } catch (error) {
             console.log(error);
@@ -141,9 +141,9 @@ class Movio {
         }
     }
 
-    async getVideo(videoId: string) {
-        await this.getVideoStatus(videoId);
-        // return true;
+    async getVideo(videoId: string, test: boolean = true) {
+        await this.getVideoStatus(videoId, test);
+        return true;
     }
 
     async getVideoWithWaterMark(video_url: string) {
