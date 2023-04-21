@@ -39,7 +39,8 @@ const serviceAccount = {
     client_x509_cert_url: config_1.config.CLIENT_X509_CERT_URL
 };
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: "gs://all-in-pod.appspot.com"
 });
 exports.db = admin.firestore();
 exports.storage = admin.storage();

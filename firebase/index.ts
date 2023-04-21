@@ -16,7 +16,8 @@ const serviceAccount = {
 }
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as ServiceAccount)
+  credential: admin.credential.cert(serviceAccount as ServiceAccount),
+  storageBucket: "gs://all-in-pod.appspot.com"
 });
 
 export const db = admin.firestore();

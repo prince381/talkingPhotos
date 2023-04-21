@@ -1,6 +1,6 @@
 import axios from "axios";
 import { config } from "../../config";
-import { db } from "../../firebase";
+import { db, storage } from "../../firebase";
 import EventEmitter from "events";
 
 class Movio {
@@ -20,7 +20,7 @@ class Movio {
     }
 
     async listPhotos() {
-        const url = 'https://api.movio.la/v1/talking_photo.list';
+        const url = 'https://api.heygen.com/v1/talking_photo.list';
         try {
             const { data: { data: photoList } } = await axios.get(url, { headers: this.defaultHeaders });
             return photoList;
@@ -31,7 +31,7 @@ class Movio {
     }
 
     async listAvatars() {
-        const url = 'https://api.movio.la/v1/avatar.list';
+        const url = 'https://api.heygen.com/v1/avatar.list';
         try {
             const { data: { data: { avatars: avatarList } } } = await axios.get(url, { headers: this.defaultHeaders });
             return avatarList;
@@ -42,7 +42,7 @@ class Movio {
     }
 
     async listVoices() {
-        const url = 'https://api.movio.la/v1/voice.list';
+        const url = 'https://api.heygen.com/v1/voice.list';
         try {
             const { data: { data: voices } } = await axios.get(url, { headers: this.defaultHeaders });
             return voices;
@@ -64,7 +64,7 @@ class Movio {
     }
 
     private async getUploadURL(type: string) {
-        const url = 'https://api.movio.la/v1/upload_url.get';
+        const url = 'https://api.heygen.com/v1/upload_url.get';
         const requestOptions = {
             headers: {
                 "x-api-key": this.defaultHeaders["x-api-key"],
@@ -93,7 +93,7 @@ class Movio {
     }
 
     async createVideo(payload: any) {
-        const url = 'https://api.movio.la/v1/video.generate';
+        const url = 'https://api.heygen.com/v1/video.generate';
         const requestOptions = {
             headers: {
                 "x-api-key": this.defaultHeaders["x-api-key"],
@@ -115,25 +115,46 @@ class Movio {
     }
 
     private async getVideoStatus(videoId: string, test: boolean) {
-        const url = 'https://api.movio.la/v1/video_status.get';
+        const url = 'https://api.heygen.com/v1/video_status.get';
         try {
             const { data: { data: response } } = await axios.get(url, {
                 headers: this.defaultHeaders,
                 params: {video_id: videoId}
             });
-            const { id, status, video_url } = response;
+            const { status, video_url } = response;
             if (status === 'completed') {
-                // const videoBuffer = await this.getVideoWithWaterMark(video_url);
-                console.log('Video ready');
+                if (test) {
+                    console.log('Getting video with watermark');
+
+                    const videoBuffer = await this.getVideoWithWaterMark(video_url);
+                    const file = storage.bucket().file(`TestVideos/${videoId}.mp4`);
+
+                    console.log('Saving video to storage');
+                    await file.save(videoBuffer, {
+                        metadata: {
+                            contentType: 'video/mp4'
+                        }
+                    });
+
+                    const metaData = await file.getMetadata();
+                    const videoUrl = metaData[0].mediaLink;
+
+                    console.log('Video generation completed');
+                    await db.collection('AudioPodcasts').doc(videoId).update({ url: videoUrl, status });
+                    return;
+                }
+
+                console.log('Video generation completed');
                 await db.collection('AudioPodcasts').doc(videoId).update({ url: video_url, status });
                 return;
+
             } else if (status === 'failed') {
                 console.log('Video failed');
                 await db.collection('AudioPodcasts').doc(videoId).update({ status });
                 return;
             } else {
                 console.log('Video not ready');
-                setTimeout(() => this.getVideoStatus(videoId, test), 30000);
+                setTimeout(() => this.getVideoStatus(videoId, test), 60000);
             }
         } catch (error) {
             console.log(error);

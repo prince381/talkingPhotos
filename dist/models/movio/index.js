@@ -26,7 +26,7 @@ class Movio {
     }
     listPhotos() {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = 'https://api.movio.la/v1/talking_photo.list';
+            const url = 'https://api.heygen.com/v1/talking_photo.list';
             try {
                 const { data: { data: photoList } } = yield axios_1.default.get(url, { headers: this.defaultHeaders });
                 return photoList;
@@ -39,7 +39,7 @@ class Movio {
     }
     listAvatars() {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = 'https://api.movio.la/v1/avatar.list';
+            const url = 'https://api.heygen.com/v1/avatar.list';
             try {
                 const { data: { data: { avatars: avatarList } } } = yield axios_1.default.get(url, { headers: this.defaultHeaders });
                 return avatarList;
@@ -52,7 +52,7 @@ class Movio {
     }
     listVoices() {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = 'https://api.movio.la/v1/voice.list';
+            const url = 'https://api.heygen.com/v1/voice.list';
             try {
                 const { data: { data: voices } } = yield axios_1.default.get(url, { headers: this.defaultHeaders });
                 return voices;
@@ -78,7 +78,7 @@ class Movio {
     }
     getUploadURL(type) {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = 'https://api.movio.la/v1/upload_url.get';
+            const url = 'https://api.heygen.com/v1/upload_url.get';
             const requestOptions = {
                 headers: {
                     "x-api-key": this.defaultHeaders["x-api-key"],
@@ -108,7 +108,7 @@ class Movio {
     }
     createVideo(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = 'https://api.movio.la/v1/video.generate';
+            const url = 'https://api.heygen.com/v1/video.generate';
             const requestOptions = {
                 headers: {
                     "x-api-key": this.defaultHeaders["x-api-key"],
@@ -131,16 +131,31 @@ class Movio {
     }
     getVideoStatus(videoId, test) {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = 'https://api.movio.la/v1/video_status.get';
+            const url = 'https://api.heygen.com/v1/video_status.get';
             try {
                 const { data: { data: response } } = yield axios_1.default.get(url, {
                     headers: this.defaultHeaders,
                     params: { video_id: videoId }
                 });
-                const { id, status, video_url } = response;
+                const { status, video_url } = response;
                 if (status === 'completed') {
-                    // const videoBuffer = await this.getVideoWithWaterMark(video_url);
-                    console.log('Video ready');
+                    if (test) {
+                        console.log('Getting video with watermark');
+                        const videoBuffer = yield this.getVideoWithWaterMark(video_url);
+                        const file = firebase_1.storage.bucket().file(`TestVideos/${videoId}.mp4`);
+                        console.log('Saving video to storage');
+                        yield file.save(videoBuffer, {
+                            metadata: {
+                                contentType: 'video/mp4'
+                            }
+                        });
+                        const metaData = yield file.getMetadata();
+                        const videoUrl = metaData[0].mediaLink;
+                        console.log('Video generation completed');
+                        yield firebase_1.db.collection('AudioPodcasts').doc(videoId).update({ url: videoUrl, status });
+                        return;
+                    }
+                    console.log('Video generation completed');
                     yield firebase_1.db.collection('AudioPodcasts').doc(videoId).update({ url: video_url, status });
                     return;
                 }
@@ -151,7 +166,7 @@ class Movio {
                 }
                 else {
                     console.log('Video not ready');
-                    setTimeout(() => this.getVideoStatus(videoId, test), 30000);
+                    setTimeout(() => this.getVideoStatus(videoId, test), 60000);
                 }
             }
             catch (error) {
