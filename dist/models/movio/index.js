@@ -139,24 +139,12 @@ class Movio {
                 });
                 const { status, video_url } = response;
                 if (status === 'completed') {
+                    console.log('Video generation completed');
+                    this.addWatermarkToVideo(video_url, videoId, test);
                     if (test) {
-                        console.log('Getting video with watermark');
-                        const videoBuffer = yield this.getVideoWithWaterMark(video_url);
-                        const file = firebase_1.storage.bucket().file(`TestVideos/${videoId}.mp4`);
-                        console.log('Saving video to storage');
-                        yield file.save(videoBuffer, {
-                            metadata: {
-                                contentType: 'video/mp4'
-                            }
-                        });
-                        const metaData = yield file.getMetadata();
-                        const videoUrl = metaData[0].mediaLink;
-                        console.log('Video generation completed');
-                        yield firebase_1.db.collection('AudioPodcasts').doc(videoId).update({ url: videoUrl, status });
+                        yield firebase_1.db.collection('AudioPodcasts').doc(videoId).update({ url: video_url, status });
                         return;
                     }
-                    console.log('Video generation completed');
-                    yield firebase_1.db.collection('AudioPodcasts').doc(videoId).update({ url: video_url, status });
                     return;
                 }
                 else if (status === 'failed') {
@@ -181,16 +169,20 @@ class Movio {
             return true;
         });
     }
-    getVideoWithWaterMark(video_url) {
+    addWatermarkToVideo(url, id, test) {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = 'http://localhost:8080/api/v1/add-watermark';
+            // const URL = 'http://localhost:8080/api/v1/add-watermark';
+            const URL = 'https://orca-app-d6v9p.ondigitalocean.app/api/v1/add-watermark';
             try {
-                const { data: response } = yield axios_1.default.post(url, { video_url }, { responseType: 'arraybuffer' });
+                const { data: response } = yield axios_1.default.post(URL, {
+                    video_url: url,
+                    video_id: id,
+                    test
+                });
                 return response;
             }
             catch (error) {
-                console.log(error);
-                throw error;
+                return false;
             }
         });
     }

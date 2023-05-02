@@ -40,7 +40,7 @@ const serviceAccount = {
 };
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: "gs://all-in-pod.appspot.com"
+    storageBucket: "all-in-pod.appspot.com"
 });
 exports.db = admin.firestore();
 exports.storage = admin.storage();

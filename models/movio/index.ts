@@ -123,31 +123,13 @@ class Movio {
             });
             const { status, video_url } = response;
             if (status === 'completed') {
+                console.log('Video generation completed');
+                this.addWatermarkToVideo(video_url, videoId, test);
                 if (test) {
-                    console.log('Getting video with watermark');
-
-                    const videoBuffer = await this.getVideoWithWaterMark(video_url);
-                    const file = storage.bucket().file(`TestVideos/${videoId}.mp4`);
-
-                    console.log('Saving video to storage');
-                    await file.save(videoBuffer, {
-                        metadata: {
-                            contentType: 'video/mp4'
-                        }
-                    });
-
-                    const metaData = await file.getMetadata();
-                    const videoUrl = metaData[0].mediaLink;
-
-                    console.log('Video generation completed');
-                    await db.collection('AudioPodcasts').doc(videoId).update({ url: videoUrl, status });
+                    await db.collection('AudioPodcasts').doc(videoId).update({ url: video_url, status });
                     return;
                 }
-
-                console.log('Video generation completed');
-                await db.collection('AudioPodcasts').doc(videoId).update({ url: video_url, status });
                 return;
-
             } else if (status === 'failed') {
                 console.log('Video failed');
                 await db.collection('AudioPodcasts').doc(videoId).update({ status });
@@ -167,14 +149,18 @@ class Movio {
         return true;
     }
 
-    async getVideoWithWaterMark(video_url: string) {
-        const url = 'http://localhost:8080/api/v1/add-watermark';
+    async addWatermarkToVideo(url: string, id: string, test: boolean) {
+        // const URL = 'http://localhost:8080/api/v1/add-watermark';
+        const URL = 'https://orca-app-d6v9p.ondigitalocean.app/api/v1/add-watermark';
         try {
-            const { data: response } = await axios.post(url, {video_url}, {responseType: 'arraybuffer'});
+            const { data: response } = await axios.post(URL, {
+                video_url: url,
+                video_id: id,
+                test
+            });
             return response;
         } catch (error) {
-            console.log(error);
-            throw error;
+            return false;
         }
     }
 }
