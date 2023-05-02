@@ -140,11 +140,7 @@ class Movio {
                 const { status, video_url } = response;
                 if (status === 'completed') {
                     console.log('Video generation completed');
-                    this.addWatermarkToVideo(video_url, videoId, test);
-                    if (test) {
-                        yield firebase_1.db.collection('AudioPodcasts').doc(videoId).update({ url: video_url, status });
-                        return;
-                    }
+                    yield this.addWatermarkToVideo(video_url, videoId, test);
                     return;
                 }
                 else if (status === 'failed') {
@@ -171,8 +167,9 @@ class Movio {
     }
     addWatermarkToVideo(url, id, test) {
         return __awaiter(this, void 0, void 0, function* () {
+            const URL = 'https://allinpod-watermarker.herokuapp.com/api/v1/add-watermark';
             // const URL = 'http://localhost:8080/api/v1/add-watermark';
-            const URL = 'https://orca-app-d6v9p.ondigitalocean.app/api/v1/add-watermark';
+            // const URL = 'https://orca-app-d6v9p.ondigitalocean.app/api/v1/add-watermark';
             try {
                 const { data: response } = yield axios_1.default.post(URL, {
                     video_url: url,
