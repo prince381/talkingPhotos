@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build": "rimraf dist && tsc",
-    "start": "node dist/cluster.js",
+    "start": "node dist/server.js",
     "preserve": "yarn build",
-    "serve": "concurrently \"tsc -w\" \"nodemon dist/cluster.js\"",
+    "serve": "concurrently \"tsc -w\" \"nodemon dist/server.js\"",
     "test": "jest",
     "coverage": "jest --coverage"
   },
