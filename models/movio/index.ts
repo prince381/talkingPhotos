@@ -148,8 +148,8 @@ class Movio {
     async addWatermarkToVideo(url: string, id: string, test: boolean) {
         // const URL = 'https://allinpod-watermarker.herokuapp.com/api/v1/add-watermark';
         // const URL = 'http://localhost:8080/api/v1/add-watermark';
-        // const URL = 'https://allin-watermarker.herokuapp.com/api/v1/add-watermark';
-        const URL = 'https://allin-watermark-service.herokuapp.com/api/v1/add-watermark';
+        const URL = 'https://allin-watermarker.herokuapp.com/api/v1/add-watermark';
+
         try {
             const { data: response } = await axios.post(URL, {
                 video_url: url,
